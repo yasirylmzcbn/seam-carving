@@ -78,7 +78,8 @@ int main() {
     // attempt to output image
     stringstream ss;
     ss << "carved" << width << "X" << height << ".ppm";
-    outputImage(ss.str().c_str(), image, width, height);
+    string filepath = "carved_images/" + ss.str();
+    outputImage(filepath.c_str(), image, width, height);
   } catch (std::exception &ex) {
     cout << "Exception thrown: " << ex.what() << endl;
     return 1; // exit with an error

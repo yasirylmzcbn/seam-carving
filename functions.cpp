@@ -22,9 +22,10 @@ void loadImage(string filename, Pixel image[][MAX_HEIGHT], unsigned int& width, 
   std::ifstream inFS;
   string line1 = "";
   unsigned int w, h, pixels = 0;
-  inFS.open(filename.c_str());
+  string path = "source_images/" + filename;
+  inFS.open(path.c_str());
   if(!inFS.is_open())
-    throw std::runtime_error("Failed to open " + filename);
+    throw std::runtime_error("Failed to open " + path);
   
   inFS >> line1;
   if(line1 != "P3")
