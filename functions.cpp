@@ -6,6 +6,7 @@
 
 using std::cout, std::endl, std::string;
 
+// initialize all pixels in the image to black
 void initializeImage(Pixel image[][MAX_HEIGHT]) {
   // iterate through columns
   for (unsigned int col = 0; col < MAX_WIDTH; col++) {
@@ -17,7 +18,7 @@ void initializeImage(Pixel image[][MAX_HEIGHT]) {
   }
 }
 
-
+// load image from file
 void loadImage(string filename, Pixel image[][MAX_HEIGHT], unsigned int& width, unsigned int& height) {
   std::ifstream inFS;
   string line1 = "";
@@ -49,7 +50,6 @@ void loadImage(string filename, Pixel image[][MAX_HEIGHT], unsigned int& width, 
         throw std::runtime_error("Invalid color value");
       }
       pixels++;
-      // cout << r << " " << g << " " << b << " " << pixels << endl;
       lastPix = {r,g,b};
       image[col][row] = lastPix;
     }
@@ -65,9 +65,9 @@ void loadImage(string filename, Pixel image[][MAX_HEIGHT], unsigned int& width, 
     throw std::runtime_error("Too many values");
 }
 
+// output image to file
 void outputImage(string filename, Pixel image[][MAX_HEIGHT], unsigned int width, unsigned int height) {
   std::ofstream outFS;
-  // cout << filename << endl;
   outFS.open(filename);
   if(!outFS.is_open())
     throw std::runtime_error("Failed to open " + filename);
@@ -81,12 +81,16 @@ void outputImage(string filename, Pixel image[][MAX_HEIGHT], unsigned int width,
   
   outFS.close();
 }
+
+// calculate the square of a number
 unsigned int square(unsigned int x) { return x*x; }
 
+// calculate the energy between two pixels
 int calcEnergy(Pixel x, Pixel y){
   return square(x.r - y.r) + square(x.g - y.g) + square(x.b - y.b);
 }
 
+// calculate the energy of a pixel in the image
 unsigned int energy(Pixel image[][MAX_HEIGHT], unsigned int x, unsigned int y, unsigned int width, unsigned int height) {
   unsigned int energy = 0;
   // non-border pixels
@@ -130,10 +134,10 @@ unsigned int energy(Pixel image[][MAX_HEIGHT], unsigned int x, unsigned int y, u
     energy = calcEnergy(image[x1][y], image[x2][y]) + calcEnergy(image[x][y1], image[x][y2]);
   }
 
-  // cout << "energy is: " << energy << " " << x << " " << y << " " << width << " " << height << endl;
   return energy;
 }
-// debugging function
+
+// debugging function to print energies of all pixels in the image
 void printEnergies(Pixel image[][MAX_HEIGHT], unsigned int width, unsigned int height) {
   cout << "--------------------------" << endl;
   for(unsigned int i = 0; i < height; i++) {
@@ -145,8 +149,7 @@ void printEnergies(Pixel image[][MAX_HEIGHT], unsigned int width, unsigned int h
   cout << "--------------------------" << endl;
 }
 
-// uncomment functions as you implement them (part 2)
-
+// load the vertical seam with the minimum energy
 unsigned int loadVerticalSeam(Pixel image[][MAX_HEIGHT], unsigned int start_col, unsigned int width, unsigned int height, unsigned int seam[]) {
   unsigned int col = start_col;
   int totalEnergy = energy(image, start_col, 0, width, height);
@@ -166,20 +169,15 @@ unsigned int loadVerticalSeam(Pixel image[][MAX_HEIGHT], unsigned int start_col,
         r = energy(image, col-1, i+1, width, height);
     
       if(std::min(f,std::min(l, r)) == f) {
-        // cout << "inf" << endl;
         totalEnergy += f;
         seam[i+1] = col;
       }
       else if(std::min(l,std::min(f, r)) == l) {
-        // cout << "inl" << endl;
-        totalEnergy += l;
         if(col != width-1)
           col++;
         seam[i+1] = col;
       }
       else if(r < l && r < f) {
-        // cout << "inr" << endl;
-        totalEnergy += r;
         if(col != 0)
           col--;
         seam[i+1] = col;
@@ -190,22 +188,9 @@ unsigned int loadVerticalSeam(Pixel image[][MAX_HEIGHT], unsigned int start_col,
   return totalEnergy;
 }
 
-void printImage(Pixel image[][MAX_HEIGHT], unsigned int width, unsigned int height) {
-  cout<<"printing"<<endl;
-  for(unsigned int r = 0; r < height; r++){
-    for(unsigned int c = 0; c < width; c++) {
-      cout << image[c][r].r << " ";
-      // << image[r][c].g << " " << image[r][c].b << ", "
-    }
-    cout << endl;
-  }
-  cout << endl;
-}
-
+// load the horizontal seam with the minimum energy
 unsigned int loadHorizontalSeam(Pixel image[][MAX_HEIGHT], unsigned int start_row, unsigned int width, unsigned int height, unsigned int seam[]) {
   unsigned int row = start_row;
-  printImage(image, width, height);
-  printEnergies(image, width, height);
   int totalEnergy = energy(image, 0, start_row, width, height);
   unsigned int l,f,r = 0;
   seam[0] = start_row;
@@ -222,22 +207,16 @@ unsigned int loadHorizontalSeam(Pixel image[][MAX_HEIGHT], unsigned int start_ro
       else
         r = energy(image, i+1, row-1, width, height);
       if(f <= r && f <= l) {
-        cout << "inf" << endl;
-        cout << f << endl;
         totalEnergy += f;
         seam[i+1] = row;
       }
       else if(l <= r && l < f) {
-        cout << "inl" << endl;
-        cout << l << endl;
         totalEnergy += l;
         if(row != height-1)
           row++;
         seam[i+1] = row;
       }
       else if(r < l && r < f) {
-        cout << "inr" << endl;
-        cout << r << endl;
         totalEnergy += r;
         if(row != 0)
           row--;
@@ -246,10 +225,10 @@ unsigned int loadHorizontalSeam(Pixel image[][MAX_HEIGHT], unsigned int start_ro
     }
   }
 
-  cout << totalEnergy << endl;
   return totalEnergy;
 }
 
+// find the vertical seam with the minimum energy
 void findMinVerticalSeam(Pixel image[][MAX_HEIGHT], unsigned int width, unsigned int height, unsigned int seam[]) {
   unsigned int minEnergyCol = 0;
   unsigned int minEnergy = INT32_MAX;
@@ -264,8 +243,8 @@ void findMinVerticalSeam(Pixel image[][MAX_HEIGHT], unsigned int width, unsigned
   loadVerticalSeam(image, minEnergyCol, width, height, seam);
 }
 
+// find the horizontal seam with the minimum energy
 void findMinHorizontalSeam(Pixel image[][MAX_HEIGHT], unsigned int width, unsigned int height, unsigned int seam[]) {
-  //  TODO: implement (part 2)
   unsigned int minEnergyRow = 0;
   unsigned int minEnergy = INT32_MAX;
   unsigned int currEnergy = 0;
@@ -279,16 +258,9 @@ void findMinHorizontalSeam(Pixel image[][MAX_HEIGHT], unsigned int width, unsign
   loadVerticalSeam(image, minEnergyRow, width, height, seam);
 }
 
-
+// remove the vertical seam with the minimum energy
 void removeVerticalSeam(Pixel image[][MAX_HEIGHT], unsigned int& width, unsigned int height, unsigned int verticalSeam[]) {
   Pixel silinecek;
-  // printImage(image, width, height);
-
-  // cout << "seam:" << endl;
-  // for(unsigned int j = 0; j < height; j++)
-  //   cout << verticalSeam[j] << " ";
-  // cout << endl << "------------------------------" << endl;
-
   for (unsigned int r = 0; r < height; r++) {
     silinecek = image[verticalSeam[r]][r];
     for (unsigned int i = verticalSeam[r]; i < width-1; i++) {
@@ -296,11 +268,10 @@ void removeVerticalSeam(Pixel image[][MAX_HEIGHT], unsigned int& width, unsigned
     }
   }
   width--;
-  // printImage(image, width, height);
 }
 
+// remove the horizontal seam with the minimum energy
 void removeHorizontalSeam(Pixel image[][MAX_HEIGHT], unsigned int width, unsigned int& height, unsigned int horizontalSeam[]) {
-  //  TODO: implement (part 2)
   Pixel silinecek;
   for (unsigned int c = 0; c < width; c++) {
     silinecek = image[c][horizontalSeam[c]];
@@ -309,5 +280,4 @@ void removeHorizontalSeam(Pixel image[][MAX_HEIGHT], unsigned int width, unsigne
     }
   }
   height--;
-
 }
